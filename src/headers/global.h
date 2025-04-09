@@ -47,6 +47,11 @@ typedef ComparationResult (*ComparationFunction)(GenericValue, GenericValue);
 typedef char *(*StringifyFunction)(GenericValue);
 
 /**
+ * Used to give the int hash of a generic value.
+ */
+typedef int (*HashingFunction)(GenericValue);
+
+/**
  * Used to delete a GenericValue data type.
  */
 typedef void (*DeleteFunction)(GenericValue);
@@ -56,9 +61,20 @@ typedef void (*DeleteFunction)(GenericValue);
  * create use this macro to instance it.
  */
 #define instance(Class) \
-    Class *o = (Class*) malloc(sizeof(Class)); \
+    Class*o = (Class*) malloc(sizeof(Class)); \
     if(!o) { \
         printf("Error on reserve memory for struct '%s'.\n", #Class); \
+        exit(EXIT_FAILURE); \
+    }
+
+/**
+ * Used to define a global abstract instant macro, every object that we
+ * create use this macro to instance it.
+ */
+#define reserve(n, Class) \
+    Class*a = (Class*) calloc(n, sizeof(Class)); \
+    if(!a) { \
+        printf("Error on reserve memory for struct array '%s'.\n", #Class); \
         exit(EXIT_FAILURE); \
     }
 
