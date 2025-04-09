@@ -25,6 +25,9 @@ LinkedList *new_linked_list(ComparationFunction compareFn, DeleteFunction delete
 }
 
 bool linked_list_push(LinkedList *list, GenericValue value) {
+    #ifdef DEV
+    LOG("Insert value %s on LinkedList '%p' at end.", list->stringifyFn(value) , list);
+    #endif
     SimpleNode *node = new_simple_node(value);
     if(!list->begin) {
         list->begin = list->end = node;
@@ -36,11 +39,17 @@ bool linked_list_push(LinkedList *list, GenericValue value) {
     node->previus = list->end;
     list->end = node;
     list->size++;
+    #ifdef DEV
+    LOG("LinkedList '%p': %s.", list, linked_list_to_string(*list));
+    #endif
 
     return true;
 }
 
 bool linked_list_shift(LinkedList *list, GenericValue value) {
+    #ifdef DEV
+    LOG("Insert value %s on LinkedList '%p' at begin.", list->stringifyFn(value) , list);
+    #endif
     SimpleNode *node = new_simple_node(value);
     if(!list->begin) {
         list->begin = list->end = node;
@@ -52,11 +61,17 @@ bool linked_list_shift(LinkedList *list, GenericValue value) {
     node->next = list->begin;
     list->begin = node;
     list->size++;
+    #ifdef DEV
+    LOG("LinkedList '%p': %s.", list, linked_list_to_string(*list));
+    #endif
 
     return true;
 }
 
 GenericValue linked_list_pop(LinkedList *list) {
+    #ifdef DEV
+    LOG("Remove last element from LinkedList '%p'.", list);
+    #endif
     if(list->begin == NULL) {
         return NULL;
     }
@@ -70,11 +85,17 @@ GenericValue linked_list_pop(LinkedList *list) {
     GenericValue *data = to_remove->data;
     delete_simple_node(to_remove, NULL);
     list->size--;
+    #ifdef DEV
+    LOG("LinkedList '%p': %s.", list, linked_list_to_string(*list));
+    #endif
 
     return data;
 }
 
 GenericValue linked_list_unshift(LinkedList *list) {
+    #ifdef DEV
+    LOG("Remove first element from LinkedList '%p'.", list);
+    #endif
     if(list->begin == NULL) {
         return NULL;
     }
@@ -82,14 +103,69 @@ GenericValue linked_list_unshift(LinkedList *list) {
     SimpleNode *ref = list->begin->next, *to_remove = list->begin;
     list->begin = ref;
     if(list->begin) {
-        list->begin->previus = NULL;   
+        list->begin->previus = NULL;
     }
 
     GenericValue *data = to_remove->data;
     delete_simple_node(to_remove, NULL);
     list->size--;
+    #ifdef DEV
+    LOG("LinkedList '%p': %s.", list, linked_list_to_string(*list));
+    #endif
 
     return data;
+}
+
+LinkedList *linked_list_remove_all(LinkedList *list, GenericValue value) {
+    #ifdef DEV
+    LOG("Remove all coincidences of %s from LinkedList '%p'.", list->stringifyFn(value), list);
+    #endif
+    if(list->begin == NULL) {
+        return NULL;
+    }
+
+    LinkedList *result = NULL;
+    SimpleNode *ref = list->begin, *prev = NULL;
+    while(ref) {
+        prev = ref;
+        ref = ref->next;
+
+        if(list->compareFn(prev->data, value) != EQUALS) {
+            continue;
+        }
+
+        if(result == NULL) {
+            result = new_linked_list(list->compareFn, list->deleteFn, list->stringifyFn);
+        }
+        GenericValue r = prev->data;
+        linked_list_push(result, r);
+        if(prev == list->begin) {
+            list->begin = ref;
+            if(prev == list->end) {
+                list->end = ref;
+            }
+            if(ref) {
+                ref->previus = NULL;
+            }
+        } else if(prev == list->end) {
+            list->end = prev->previus;
+            if(list->end) {
+                list->end->next = prev->next;
+            }
+        } else if(ref) {
+            ref->previus = prev->previus;
+            if(ref->previus) {
+                ref->previus->next = ref;
+            }
+        }
+        delete_simple_node(prev, NULL);
+        list->size--;
+    }
+    #ifdef DEV
+    LOG("LinkedList '%p': %s.", list, linked_list_to_string(*list));
+    #endif
+
+    return result;
 }
 
 char *linked_list_to_string(LinkedList list) {

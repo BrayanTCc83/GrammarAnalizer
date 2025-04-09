@@ -27,6 +27,7 @@ bool linked_list_push(LinkedList*, GenericValue);
 bool linked_list_shift(LinkedList*, GenericValue);
 GenericValue linked_list_pop(LinkedList*);
 GenericValue linked_list_unshift(LinkedList*);
+LinkedList *linked_list_remove_all(LinkedList*, GenericValue);
 char *linked_list_to_string(LinkedList);
 bool linked_list_is_void(LinkedList);
 void delete_linked_list(LinkedList*);
