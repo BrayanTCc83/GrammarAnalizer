@@ -9,19 +9,20 @@ GLOBAL=$(SOURCE)/global.c
 STRUCTS=$(SOURCE)/structs
 SET=$(STRUCTS)/set/*.c
 LIST=$(STRUCTS)/list/*.c
+HASHTABLE=$(STRUCTS)/hashtable/*.c
 
 DISTRIBUTION=dist
 OUTPUT=$(DISTRIBUTION)/GrammarEvaluator
 
 CC:=gcc
 
-compile: $(MAIN) $(GLOBAL) $(SET) $(LIST) $(HEADERS)/*.h | $(DISTRIBUTION)
+compile: $(MAIN) $(GLOBAL) $(SET) $(LIST) $(HASHTABLE) $(HEADERS)/*.h | $(DISTRIBUTION)
 	@echo Compile program.
-	$(CC) -o $(OUTPUT) $(MAIN) $(GLOBAL) $(SET) $(LIST) -I $(HEADERS) 
+	$(CC) -o $(OUTPUT) $(MAIN) $(GLOBAL) $(SET) $(LIST) $(HASHTABLE) -I $(HEADERS) 
 
-test: $(TEST_MAIN) $(GLOBAL) $(SET) $(LIST) $(HEADERS)/*.h | $(DISTRIBUTION)
+test: $(TEST_MAIN) $(GLOBAL) $(SET) $(LIST) $(HASHTABLE) $(HEADERS)/*.h | $(DISTRIBUTION)
 	@echo Compile program.
-	$(CC) -o $(OUTPUT) $(TEST_MAIN) $(GLOBAL) $(SET) $(LIST) -I $(HEADERS)  -DDEV
+	$(CC) -o $(OUTPUT) $(TEST_MAIN) $(GLOBAL) $(SET) $(LIST) $(HASHTABLE) -I $(HEADERS)  -DDEV
 
 $(DISTRIBUTION):
 	@echo Making directory $(DISTRIBUTION).
