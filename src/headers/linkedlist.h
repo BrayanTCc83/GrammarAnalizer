@@ -4,21 +4,6 @@
 #include <stdbool.h>
 #include "global.h"
 
-typedef struct _simple_node SimpleNode;
-
-struct _simple_node {
-    GenericValue data;
-    SimpleNode *previus, *next;
-};
-
-typedef struct _linked_list {
-    SimpleNode *begin, *end;
-    size_t size;
-    ComparationFunction compareFn;
-    DeleteFunction deleteFn;
-    StringifyFunction stringifyFn;
-} LinkedList;
-
 SimpleNode *new_simple_node(GenericValue);
 void delete_simple_node(SimpleNode*, DeleteFunction);
 
@@ -28,9 +13,12 @@ bool linked_list_shift(LinkedList*, GenericValue);
 GenericValue linked_list_pop(LinkedList*);
 GenericValue linked_list_unshift(LinkedList*);
 LinkedList *linked_list_remove_all(LinkedList*, GenericValue);
-char *linked_list_to_string(LinkedList);
+LinkedList *linked_list_get_all(LinkedList*, GenericValue);
+ComparationResult linked_list_compare(GenericValue, GenericValue);
+Set *linked_list_as_set(LinkedList);
+char *linked_list_to_string(GenericValue);
 bool linked_list_is_void(LinkedList);
-void delete_linked_list(LinkedList*);
+void delete_linked_list(GenericValue);
 
 #ifdef DEV
 char *simple_node_to_representation(SimpleNode, StringifyFunction);
