@@ -8,35 +8,6 @@
 #include "linkedlist.h"
 
 /**
- * This is an struct that indicates a binary node as BinaryNode.
- * 
- * Contains two pointers to left and right nodes, also its stored data
- * (as literal string and byte set) and height.
- */
-typedef struct _binary_node BinaryNode;
-
-struct _binary_node {
-    GenericValue data;
-    int height;
-    BinaryNode *left, *right;
-};
-
-/**
- * The representation of the set, used for grammar sets (First, Follow
- * and Selection Sets [SS]), its implemented as a Autobalanced Binary
- * Tree, with specification AVL.
- * 
- * Contains a root and a deep.
- */
-typedef struct _set {
-    BinaryNode *root;
-    size_t deep, size;
-    ComparationFunction compareFn;
-    StringifyFunction stringifyFn;
-    DeleteFunction deleteFn;
-} Set;
-
-/**
  * Used to instance a new binary node, with all inner values init.
  * The value is the argument given, height default is 0, and its
  * pointers are NULL.
@@ -57,7 +28,7 @@ OperationResult binary_node_remove(BinaryNode*, ComparationFunction, GenericValu
 /**
  * Find if in the children of a node its contained the value.
  */
-bool binary_node_search(BinaryNode, ComparationFunction, GenericValue);
+GenericValue binary_node_search(BinaryNode*, ComparationFunction, GenericValue);
 
 #ifdef DEV
 /**
@@ -98,7 +69,7 @@ bool set_remove(Set*, GenericValue);
 /**
  * Find if in the children of a node its contained the value.
  */
-bool set_search(Set, GenericValue);
+GenericValue set_search(Set, GenericValue);
 
 /**
  * Parse the set as a linked list.
@@ -118,6 +89,8 @@ Set *set_union(Set, Set);
  * When the resultant set is void set so the two sets are the same.
  */
 Set *set_difference(Set, Set);
+
+bool set_disjoint(Set, Set);
 
 #ifdef DEV
 /**

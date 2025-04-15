@@ -307,33 +307,33 @@ OperationResult binary_node_remove(BinaryNode *node, ComparationFunction compare
     return result;
 }
 
-bool binary_node_search(BinaryNode node, ComparationFunction compareFn, GenericValue value) {
-    ComparationResult result = compareFn(node.data, value);
+GenericValue binary_node_search(BinaryNode *node, ComparationFunction compareFn, GenericValue value) {
+    ComparationResult result = compareFn(node->data, value);
     if(result == EQUALS) {
         #ifdef DEV
         LOG("Value found at '%p'.", node);
         #endif
-        return true;
+        return node->data;
     }
 
-    if(result == BIGGER && node.left) {
+    if(result == BIGGER && node->left) {
         #ifdef DEV
         LOG("Searching value at left of '%p'.", node);
         #endif
-        return binary_node_search(*node.left, compareFn, value);
+        return binary_node_search(node->left, compareFn, value);
     }
     
-    if(result == SMALLER && node.right) {
+    if(result == SMALLER && node->right) {
         #ifdef DEV
         LOG("Searching value at right of '%p'.", node);
         #endif
-        return binary_node_search(*node.right, compareFn, value);
+        return binary_node_search(node->right, compareFn, value);
     }
 
     #ifdef DEV
-    LOG("Value not found.", node);
+    LOG("Value not found %p.", node);
     #endif
-    return false;
+    return NULL;
 }
 
 #ifdef DEV

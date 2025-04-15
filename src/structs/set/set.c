@@ -60,12 +60,12 @@ bool set_remove(Set *set, GenericValue value) {
     return result.success;
 }
 
-bool set_search(Set set, GenericValue value) {
+GenericValue set_search(Set set, GenericValue value) {
     if(!set.root) {
-        return false;
+        return NULL;
     }
 
-    return binary_node_search(*set.root, set.compareFn, value);
+    return binary_node_search(set.root, set.compareFn, value);
 }
 
 // In order: Left, Root, Right
@@ -125,6 +125,11 @@ Set *set_difference(Set set1, Set set2) {
     delete_linked_list(list2);
 
     return set;
+}
+
+bool set_disjoint(Set set1, Set set2) {
+    return set_difference(set1, set2)->size == set1.size
+        && set_difference(set2, set1)->size == set2.size;
 }
 
 #ifdef DEV
