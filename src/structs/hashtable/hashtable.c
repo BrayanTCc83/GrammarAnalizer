@@ -55,7 +55,7 @@ bool hash_table_insert(HashTable *table, GenericValue key, GenericValue value) {
 
     bool res = linked_list_push(list, new_tuple(key, value));
     #ifdef DEV
-    LOG("HashTable '%p': %s.", table, table_to_string(table));
+    LOG("HashTable '%p': %s.", table, hash_table_to_string(table));
     this = table;
     #endif
     this = NULL;
@@ -78,7 +78,22 @@ LinkedList *hash_table_remove(HashTable *table, GenericValue key) {
     return res;
 }
 
-char *table_to_string(HashTable *table) {
+LinkedList *hash_table_get(HashTable *table, GenericValue key) {
+    if(!table->hasingFn) {
+        printf("Hash table has not a hashing function.");
+        return false;
+    }
+    
+    this = table;
+    int hash = table->hasingFn(key) % table->size;
+    LinkedList *list = table->lists[hash];
+    LinkedList *res = list ? linked_list_get_all(list, new_tuple(key, NULL)) : NULL;
+    this = NULL;
+
+    return res;
+}
+
+char *hash_table_to_string(HashTable *table) {
     char *string = to_string();
     int idx = 0;
     this = table;

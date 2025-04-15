@@ -28,7 +28,8 @@ void hash_table_set_key_fn(HashTable*, ComparationFunction, DeleteFunction, Stri
 void hash_table_set_value_fn(HashTable*, ComparationFunction, DeleteFunction, StringifyFunction);
 bool hash_table_insert(HashTable*, GenericValue, GenericValue);
 LinkedList *hash_table_remove(HashTable*, GenericValue);
-char *table_to_string(HashTable*);
+LinkedList *hash_table_get(HashTable*, GenericValue);
+char *hash_table_to_string(HashTable*);
 void delete_hash_table(HashTable*);
 
 #endif // __GRAMMAR_HASH_TABLE

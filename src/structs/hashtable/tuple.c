@@ -30,9 +30,9 @@ char *tuple_to_string(GenericValue t) {
     int idx = 0;
 
     if(this->keyStrFn) {
-        idx += sprintf(string, "('%s': ", this->keyStrFn(tuple->key));
+        idx += sprintf(string, "(%s: ", this->keyStrFn(tuple->key));
     } else {
-        idx += sprintf(string, "('%p': ", tuple->key);
+        idx += sprintf(string, "(%p: ", tuple->key);
     }
 
     if(this->valueStrFn) {
