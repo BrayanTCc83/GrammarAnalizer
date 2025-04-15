@@ -1,1 +1,8 @@
+# Folder for visual studio code configuration.
+.vscode
+
+# Folder for executable generated code. 
 dist
+
+# Example files.
+*.txt
