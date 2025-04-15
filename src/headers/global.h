@@ -89,4 +89,48 @@ char *to_representation();
 }
 #endif
 
+typedef struct _simple_node SimpleNode;
+
+struct _simple_node {
+    GenericValue data;
+    SimpleNode *previus, *next;
+};
+
+typedef struct _linked_list {
+    SimpleNode *begin, *end;
+    size_t size;
+    ComparationFunction compareFn;
+    DeleteFunction deleteFn;
+    StringifyFunction stringifyFn;
+} LinkedList;
+
+/**
+ * This is an struct that indicates a binary node as BinaryNode.
+ * 
+ * Contains two pointers to left and right nodes, also its stored data
+ * (as literal string and byte set) and height.
+ */
+typedef struct _binary_node BinaryNode;
+
+struct _binary_node {
+    GenericValue data;
+    int height;
+    BinaryNode *left, *right;
+};
+
+/**
+ * The representation of the set, used for grammar sets (First, Follow
+ * and Selection Sets [SS]), its implemented as a Autobalanced Binary
+ * Tree, with specification AVL.
+ * 
+ * Contains a root and a deep.
+ */
+typedef struct _set {
+    BinaryNode *root;
+    size_t deep, size;
+    ComparationFunction compareFn;
+    StringifyFunction stringifyFn;
+    DeleteFunction deleteFn;
+} Set;
+
 #endif // __GRAMMAR_GLOBAL_MACROS
