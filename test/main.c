@@ -4,6 +4,7 @@
 #include "../src/headers/linkedlist.h"
 #include "../src/headers/set.h"
 #include "../src/headers/hashtable.h"
+#include "../src/headers/grammar.h"
 #include "../src/headers/interpreter.h"
 
 int main(int argc, char *argv[]) {
