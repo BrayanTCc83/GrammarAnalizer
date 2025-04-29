@@ -171,7 +171,7 @@ LinkedList *linked_list_remove_all(LinkedList *list, GenericValue value) {
 
 LinkedList *linked_list_get_all(LinkedList *list, GenericValue value) {
     #ifdef DEV
-    LOG("Remove all coincidences of %s from LinkedList '%p'.", list->stringifyFn(value), list);
+    LOG("Get all coincidences of %p from LinkedList '%p'.", value, list);
     #endif
     if(list->begin == NULL) {
         return NULL;

@@ -61,6 +61,9 @@ bool set_remove(Set *set, GenericValue value) {
 }
 
 GenericValue set_search(Set set, GenericValue value) {
+    #ifdef DEV
+    LOG("Search value %s in Set.", set.stringifyFn(value));
+    #endif
     if(!set.root) {
         return NULL;
     }
@@ -82,6 +85,9 @@ static void _set_in_order_as_list(BinaryNode node, LinkedList *list) {
 }
 
 LinkedList *set_as_list(Set set) {
+    #ifdef DEV
+    LOG("Set %s as linked list.", set_to_string(set));
+    #endif
     LinkedList *list = new_linked_list(set.compareFn, set.deleteFn, set.stringifyFn);
     if(set.root) {
         _set_in_order_as_list(*set.root, list);
@@ -90,6 +96,9 @@ LinkedList *set_as_list(Set set) {
 }
 
 Set *set_union(Set set1, Set set2) {
+    #ifdef DEV
+    LOG("Union of sets %s and %s.", set_to_string(set1), set_to_string(set2));
+    #endif
     Set *set = new_set(set1.compareFn, set1.deleteFn, set1.stringifyFn);
     LinkedList *list1 = set_as_list(set1);
     LinkedList *list2 = set_as_list(set2);
@@ -109,6 +118,9 @@ Set *set_union(Set set1, Set set2) {
 }
 
 Set *set_difference(Set set1, Set set2) {
+    #ifdef DEV
+    LOG("Differences of sets %s and %s.", set_to_string(set1), set_to_string(set2));
+    #endif
     Set *set = new_set(set1.compareFn, set1.deleteFn, set1.stringifyFn);
     LinkedList *list1 = set_as_list(set1);
     LinkedList *list2 = set_as_list(set2);
@@ -127,9 +139,42 @@ Set *set_difference(Set set1, Set set2) {
     return set;
 }
 
+Set *set_simetric_difference(Set set1, Set set2) {
+    Set *diff1 = set_difference(set1, set2);
+    Set *diff2 = set_difference(set2, set1);
+    return set_union(*diff1, *diff2);
+}
+
+Set *set_intersection(Set set1, Set set2) {
+    #ifdef DEV
+    LOG("Intersection of sets %s and %s.", set_to_string(set1), set_to_string(set2));
+    #endif
+    Set *temp = new_set(set1.compareFn, set1.deleteFn, set1.stringifyFn);
+    Set *set = new_set(set1.compareFn, set1.deleteFn, set1.stringifyFn);
+    LinkedList *list1 = set_as_list(set1);
+    LinkedList *list2 = set_as_list(set2);
+
+    while(!linked_list_is_void(*list1)) {
+        set_insert(temp, linked_list_unshift(list1));
+    }
+
+    while(!linked_list_is_void(*list2)) {
+        GenericValue *intersect = linked_list_unshift(list2);
+        if(set_remove(temp, intersect)) {
+            set_insert(set, intersect);
+        }
+    }
+
+    delete_linked_list(list1);
+    delete_linked_list(list2);
+    return set;
+}
+
 bool set_disjoint(Set set1, Set set2) {
-    return set_difference(set1, set2)->size == set1.size
-        && set_difference(set2, set1)->size == set2.size;
+    #ifdef DEV
+    LOG("Check disjoint of sets %s and %s.", set_to_string(set1), set_to_string(set2));
+    #endif
+    return set_intersection(set1, set2)->size == 0;
 }
 
 #ifdef DEV
@@ -174,7 +219,7 @@ char *set_to_representation(Set set) {
 
 char *set_to_string(Set set) {
     if(!set.root) {
-        return "{}";
+        return "{ }";
     }
 
     char *string = to_string();

@@ -79,22 +79,24 @@ bool grammar_has_start(Grammar grammar) {
 
 void grammar_show_first_sets(Grammar grammar) {
     SimpleNode *ref = set_as_list(*grammar.productions)->begin;
+    printf(" - Productions First Set:\n");
     while(ref) {
         if(!((Production*)ref->data)->first) {
             ref = ref->next;
             continue;
         }
-        printf("%20s: %s\n", production_to_string(ref->data), set_to_string(*((Production*)ref->data)->first));
+        printf("%50s: %s\n", production_to_string(ref->data), set_to_string(*((Production*)ref->data)->first));
         ref = ref->next;
     }
 
+    printf(" - Non terminals First Set:\n");
     ref = set_as_list(*grammar.no_terminal)->begin;
     while(ref) {
         if(!((Symbol*)ref->data)->first) {
             ref = ref->next;
             continue;
         }
-        printf("%20s: %s\n", symbol_to_string(ref->data), set_to_string(*((Symbol*)ref->data)->first));
+        printf("%50s: %s\n", symbol_to_string(ref->data), set_to_string(*((Symbol*)ref->data)->first));
         ref = ref->next;
     }
 }
@@ -106,7 +108,7 @@ void grammar_show_follow_sets(Grammar grammar) {
             ref = ref->next;
             continue;
         }
-        printf("%20s: %s\n", symbol_to_string(ref->data), set_to_string(*((Symbol*)ref->data)->follow));
+        printf("%50s: %s\n", symbol_to_string(ref->data), set_to_string(*((Symbol*)ref->data)->follow));
         ref = ref->next;
     }
 }
@@ -118,7 +120,7 @@ void grammar_show_selection_sets(Grammar grammar) {
             ref = ref->next;
             continue;
         }
-        printf("%20s: %s\n", production_to_string(ref->data), set_to_string(*((Production*)ref->data)->select));
+        printf("%50s: %s\n", production_to_string(ref->data), set_to_string(*((Production*)ref->data)->select));
         ref = ref->next;
     }
 }

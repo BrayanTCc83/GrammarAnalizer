@@ -18,38 +18,15 @@ BinaryNode *new_binary_node(GenericValue value) {
 }
 
 static int _binary_node_get_height(BinaryNode node) {
-    if(!node.left && !node.right){
-        return 1;
-    }
-
-    if(node.left && !node.right) {
-        return node.left->height + 1;
-    }
-
-    if(node.right && !node.left) {
-        return node.right->height + 1;
-    }
-
-    return (
-        node.left->height < node.right->height
-            ? node.right->height : node.left->height
-    ) + 1;
+    int left_height = node.left ? node.left->height : 0;
+    int right_height = node.right ? node.right->height : 0;
+    return 1 + (left_height > right_height ? left_height : right_height);
 }
 
 static int _binary_node_get_balance_factor(BinaryNode node) {
-    if(node.left && node.right) {
-        return node.left->height - node.right->height;
-    }
-
-    if(node.left && !node.right) {
-        return node.left->height;
-    }
-
-    if(node.right && !node.left) {
-        return - node.right->height;
-    }
-
-    return 0;
+    int left_height = node.left ? node.left->height : 0;
+    int right_height = node.right ? node.right->height : 0;
+    return left_height - right_height;
 }
 
 static BinaryNode *_binary_node_rotation_ll(BinaryNode *node) {
@@ -87,49 +64,21 @@ static BinaryNode *_binary_node_rotation_rr(BinaryNode *node) {
 }
 
 static BinaryNode *_binary_node_rotation_lr(BinaryNode *node) {
-    if(!node->right) {
+    if(!node || !node->left || !node->left->right) {
         return node;
     }
-
-    BinaryNode *reference = node->right;
-    BinaryNode *rotated = node->right->left;
-
-    node->right = rotated->left;
-    reference->left = rotated->right;
-    rotated->left = node;
-    rotated->right = reference;
-
-    #ifdef DEV
-    LOG("Reset height of binary node '%p' by left-right rotation is %i.", reference->left, reference->left->height);
-    #endif
-    #ifdef DEV
-    LOG("Reset height of binary node '%p' by left-right rotation is %i.", rotated->left, rotated->left->height);
-    #endif
-
-    return rotated;
+    
+    node->left = _binary_node_rotation_ll(node->left);
+    return _binary_node_rotation_rr(node);
 }
 
 static BinaryNode *_binary_node_rotation_rl(BinaryNode *node) {
-    if(!node->left) {
+    if (!node || !node->right || !node->right->left) {
         return node;
     }
-
-    BinaryNode *reference = node->left;
-    BinaryNode *rotated = node->left->right;
-
-    node->left = rotated->right;
-    reference->right = rotated->left;
-    rotated->right = node;
-    rotated->left = reference;
-
-    #ifdef DEV
-    LOG("Reset height of binary node '%p' by right-left rotation is %i.", reference->right, reference->right->height);
-    #endif
-    #ifdef DEV
-    LOG("Reset height of binary node '%p' by right-left rotation is %i.", rotated->right, rotated->right->height);
-    #endif
-
-    return rotated;
+    
+    node->right = _binary_node_rotation_rr(node->right);
+    return _binary_node_rotation_ll(node);
 }
 
 OperationResult binary_node_insert(BinaryNode *node, ComparationFunction compareFn, GenericValue value) {
@@ -144,24 +93,24 @@ OperationResult binary_node_insert(BinaryNode *node, ComparationFunction compare
     }
 
     ComparationResult cmpResult = compareFn(node->data, value);
-    if(cmpResult == EQUALS) {
+    if(cmpResult == SMALLER) {
         #ifdef DEV
-        LOG("The value is inserted yet in Set as '%p'.", node);
+        LOG("Inserting value on right of '%p'.", node);
         #endif
-        result.success = false;
-        return result;
+        result = binary_node_insert(node->right, compareFn, value);
+        node->right = (BinaryNode*) result.returned;
     } else if(cmpResult == BIGGER) {
         #ifdef DEV
         LOG("Inserting value on left of '%p'.", node);
         #endif
         result = binary_node_insert(node->left, compareFn, value);
         node->left = (BinaryNode*) result.returned;
-    } else if(cmpResult == SMALLER) {
+    } else if(cmpResult == EQUALS) {
         #ifdef DEV
-        LOG("Inserting value on right of '%p'.", node);
+        LOG("The value is inserted yet in Set as '%p'.", node);
         #endif
-        result = binary_node_insert(node->right, compareFn, value);
-        node->right = (BinaryNode*) result.returned;
+        result.success = false;
+        return result;
     }
 
     result.returned = node;
@@ -174,32 +123,36 @@ OperationResult binary_node_insert(BinaryNode *node, ComparationFunction compare
     LOG("Height of binary node '%p' is %i.", node, node->height);
     #endif
 
-    int root = _binary_node_get_balance_factor(*node);
+    int root_balance = _binary_node_get_balance_factor(*node);
     #ifdef DEV
-    LOG("Balance factor of node '%p' is %i.", node, root);
+    LOG("Balance factor of node '%p' is %i.", node, root_balance);
     #endif
-    if(root == 2) {
-        int left = _binary_node_get_balance_factor(*node->left);
+    if(root_balance > 1) {
+        int left_balance = _binary_node_get_balance_factor(*node->left);
         #ifdef DEV
-        LOG("Balance factor of node '%p' in left (%p) is %i.", node, node->left, left);
+        LOG("Balance factor of node '%p' in left (%p) is %i.", node, node->left, left_balance);
         #endif
-        if(left >= 0) {
-            result.returned = _binary_node_rotation_ll(node);
-        } else if(left <= -1) {
-            result.returned = _binary_node_rotation_lr(node);
+        if(left_balance > 0) {
+            node = _binary_node_rotation_ll(node);
+        } else if(left_balance < 0) {
+            node = _binary_node_rotation_lr(node);
         }
-    } else if(root == -2) {
-        int right = _binary_node_get_balance_factor(*node->right);
+        node->height = _binary_node_get_height(*node);
+    } else if(root_balance < -1) {
+        int right_balance = _binary_node_get_balance_factor(*node->right);
         #ifdef DEV
-        LOG("Balance factor of node '%p' in right (%p) is %i.", node, node->right, right);
+        LOG("Balance factor of node '%p' in right (%p) is %i.", node, node->right, right_balance);
         #endif
-        if(right <= 0) {
-            result.returned = _binary_node_rotation_rr(node);
-        } else if(right >= 1) {
-            result.returned = _binary_node_rotation_rl(node);
+        if(right_balance < 0) {
+            node = _binary_node_rotation_rr(node);
+        } else if(right_balance > 0) {
+            node = _binary_node_rotation_rl(node);
         }
+        node->height = _binary_node_get_height(*node);
     }
 
+    result.returned = node;
+    result.success = true;
     return result;
 }
 
@@ -222,50 +175,62 @@ OperationResult binary_node_remove(BinaryNode *node, ComparationFunction compare
         .success = true,
         .returned = node
     };
+    
     if(!node) {
         result.success = false;
         return result;
     }
 
     ComparationResult cmpResult = compareFn(node->data, value);
-    if(cmpResult == SMALLER && node->right) {
+    if(cmpResult == SMALLER) {
         #ifdef DEV
-        LOG("Removing value from right of '%p'.", node);
+        LOG("Going to right of '%p'.", node);
         #endif
         result = binary_node_remove(node->right, compareFn, value);
         node->right = result.returned;
-    } else if(cmpResult == BIGGER && node->left) {
+    } else if(cmpResult == BIGGER) {
         #ifdef DEV
-        LOG("Removing value from left of '%p'.", node);
+        LOG("Going to left of '%p'.", node);
         #endif
         result = binary_node_remove(node->left, compareFn, value);
         node->left = result.returned;
-    } else if(cmpResult == EQUALS) {
+    } else {
         #ifdef DEV
-        LOG("Removing value '%p'.", node);
+        LOG("Removing node '%p' with data.", node);
         #endif
-        if(node->left) {
+        if (!node->left && !node->right) {
             #ifdef DEV
-            LOG("Removing left side of '%p'.", node);
+            LOG("Leaf node. Deleting '%p'", node);
             #endif
-            node->data = _binary_node_pre(node->left);
-            result = binary_node_remove(node->left, compareFn, node->data);
-            node->left = result.returned;
-        } else if(node->right) {
-            #ifdef DEV
-            LOG("Removing right side of '%p'.", node);
-            #endif
-            node->data = _binary_node_suc(node->right);
-            result = binary_node_remove(node->right, compareFn, node->data);
-            node->right  = result.returned;
-        } else {
             delete_binary_node(node, NULL);
             result.returned = NULL;
             return result;
+        } else if (!node->left) {
+            #ifdef DEV
+            LOG("One child (right). Replacing '%p' with '%p'", node, node->right);
+            #endif
+            result.returned = node->right;
+            node->right = NULL;
+            delete_binary_node(node, NULL);
+            return result;
+        } else if (!node->right) {
+            BinaryNode *temp = node;
+            #ifdef DEV
+            LOG("One child (left). Replacing '%p' with '%p'", node, node->left);
+            #endif
+            result.returned = node->left;
+            node->left = NULL;
+            delete_binary_node(node, NULL);
+            return result;
+        } else {
+            #ifdef DEV
+            LOG("Two children. Finding successor for '%p'", node);
+            #endif
+            GenericValue successor = _binary_node_suc(node->right);
+            node->data = successor;
+            result = binary_node_remove(node->right, compareFn, successor);
+            node->right = result.returned;
         }
-    } else {
-        result.success = false;
-        return result;
     }
 
     result.returned = node;
@@ -274,36 +239,33 @@ OperationResult binary_node_remove(BinaryNode *node, ComparationFunction compare
     }
 
     node->height = _binary_node_get_height(*node);
-    int root = _binary_node_get_balance_factor(*node);
+    int root_balance = _binary_node_get_balance_factor(*node);
     #ifdef DEV
-    LOG("Balance factor of node '%p' is %i.", node, root);
+    LOG("Balance factor of node '%p' is %i.", node, root_balance);
     #endif
-    if(root >= 1) {
-        int left = _binary_node_get_balance_factor(*node->left);
+    if (root_balance > 1) {
+        int left_balance = _binary_node_get_balance_factor(*node->left);
         #ifdef DEV
-        LOG("Balance factor of node '%p' in left (%p) is %i.", node, node->left, left);
+        LOG("Left-heavy node '%p'. Left balance = %d", node, left_balance);
         #endif
-        if(left >= 1) {
-            result.returned = _binary_node_rotation_ll(node);
-        } else if(left <= -1) {
-            result.returned = _binary_node_rotation_lr(node);
-        } else if(left == 0) {
-            result.returned = _binary_node_rotation_ll(node);
+        if (left_balance >= 0) {
+            node = _binary_node_rotation_ll(node);
+        } else if(left_balance < 0) {
+            node = _binary_node_rotation_lr(node->left);
         }
-    } else if(root <= -1) {
-        int right = _binary_node_get_balance_factor(*node->right);
+    } else if (root_balance < -1) {
+        int right_balance = _binary_node_get_balance_factor(*node->right);
         #ifdef DEV
-        LOG("Balance factor of node '%p' in right (%p) is %i.", node, node->right, right);
+        LOG("Right-heavy node '%p'. Right balance = %d", node, right_balance);
         #endif
-        if(right <= -1) {
-            result.returned = _binary_node_rotation_rr(node);
-        } else if(right >= 1) {
-            result.returned = _binary_node_rotation_rl(node);
-        } else if(right == 0) {
-            result.returned = _binary_node_rotation_rr(node);
+        if (right_balance <= 0) {
+            node = _binary_node_rotation_rr(node);
+        } else if(right_balance > 0) {
+            node = _binary_node_rotation_rl(node);
         }
     }
 
+    result.returned = node;
     return result;
 }
 

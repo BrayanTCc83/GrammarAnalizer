@@ -11,9 +11,6 @@ Parser *new_parser(Scanner *scanner) {
     o->scanner = scanner;
     o->grammar = o->scanner->grammar;
     o->errors = new_linked_list(symbol_compare, delete_symbol, symbol_to_string);
-    o->rules = new_hash_table(o->grammar->no_terminal->size + 3);
-    hash_table_set_key_fn(o->rules, symbol_compare, delete_symbol, symbol_to_string, symbol_to_hash);
-    hash_table_set_value_fn(o->rules, production_compare, delete_production, production_to_string);
 
     return o;
 }
@@ -28,39 +25,52 @@ static Production *parser_create_production(Parser *parser, Symbol *symbol) {
 
 // Set start and generates productions
 static bool parser_generate_productions(Parser *parser) {
-    char *token = NULL;
+    #ifdef DEV
+    LOG("Generating Productions.");
+    #endif
+    char *token = NULL, *last_token = NULL;
     Production *production = NULL;
-    Symbol *symbol = NULL;
-    bool is_new_production = true;
+    Symbol *symbol = NULL, *s = NULL;
     FILE *file = parser->scanner->file;
 
     while(feof(file) != EOF){
+        last_token = token;
         token = scanner_read_token(parser->scanner);
         if(token == (void*)EOF) {
             break;
         }
-    
-        symbol = new_symbol(ERROR, token);
-        if(is_new_production) {
-            getc(file);
-            scanner_read_token(parser->scanner);
+        #ifdef DEV
+        LOG("Read token '%s'.", token);
+        #endif
 
-            Symbol *s = grammar_search_no_terminal(*parser->grammar, symbol);
+        if(strcmp(token, "->") == 0) {
+            #ifdef DEV
+            LOG("Create new production for '%s'.", last_token);
+            #endif
+            symbol = new_symbol(ERROR, last_token);
+            s = grammar_search_no_terminal(*parser->grammar, symbol);
             production = parser_create_production(parser, s);
-        } else {
-            Symbol *s = grammar_search_no_terminal(*parser->grammar, symbol);
+        } else if(production != NULL && strlen(token) > 0) {
+            #ifdef DEV
+            LOG("Insert '%s' on production '%s' at Terminal.", token, production_to_string(production));
+            #endif
+            symbol = new_symbol(ERROR, token);;
+            s = grammar_search_no_terminal(*parser->grammar, symbol);
             if(!s) {
                 s = grammar_search_terminal(*parser->grammar, symbol);
             }
-            production_insert(production, s);
+            if(s) {
+                production_insert(production, s);
+            }
         }
 
         if(getc(file) == '\n') {
-            is_new_production = true;
-        } else {
-            is_new_production = false;
+            production = NULL;
         }
     }
+    #ifdef DEV
+    LOG("Grammar Productions: %s", set_to_string(*parser->grammar->productions));
+    #endif
     return true;
 }
 
@@ -74,12 +84,23 @@ static bool parser_generate_rules(Parser *parser) {
         }
         ref = ref->next;
     }
-
+    #ifdef DEV
+    LOG("Interpreter Rules: %s", hash_table_to_string(parser->rules));
+    #endif
     return true;
 }
 
 bool parser_start(Parser *parser) {
-    if(scanner_start(parser->scanner)) {
+    bool res = scanner_start(parser->scanner);
+
+    parser->rules = new_hash_table(parser->grammar->no_terminal->size + 7);
+    hash_table_set_key_fn(parser->rules, symbol_compare, delete_symbol, symbol_to_string, symbol_to_hash);
+    hash_table_set_value_fn(parser->rules, production_compare, delete_production, production_to_string);
+    #ifdef DEV
+    LOG("Productions: %s", hash_table_to_string(parser->rules));
+    #endif
+
+    if(res) {
         return parser_generate_productions(parser) && parser_generate_rules(parser);
     }
 
@@ -88,7 +109,7 @@ bool parser_start(Parser *parser) {
         fprintf(stderr, "[Scanner Error]: %s\n", symbol_to_string(ref->data));
         ref = ref->next;
     }
-    return false;
+    return parser_generate_productions(parser);
 }
 
 void delete_parser(Parser *parser) {

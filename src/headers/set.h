@@ -89,6 +89,8 @@ Set *set_union(Set, Set);
  * When the resultant set is void set so the two sets are the same.
  */
 Set *set_difference(Set, Set);
+Set *set_simetric_difference(Set, Set);
+Set *set_intersection(Set, Set);
 
 bool set_disjoint(Set, Set);
 

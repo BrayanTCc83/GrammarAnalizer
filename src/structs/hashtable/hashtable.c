@@ -79,6 +79,9 @@ LinkedList *hash_table_remove(HashTable *table, GenericValue key) {
 }
 
 LinkedList *hash_table_get(HashTable *table, GenericValue key) {
+    #ifdef DEV
+    LOG("HashTable %p get value '%s'.", table, table->keyStrFn(key));
+    #endif
     if(!table->hasingFn) {
         printf("Hash table has not a hashing function.");
         return false;
@@ -87,7 +90,15 @@ LinkedList *hash_table_get(HashTable *table, GenericValue key) {
     this = table;
     int hash = table->hasingFn(key) % table->size;
     LinkedList *list = table->lists[hash];
-    LinkedList *res = list ? linked_list_get_all(list, new_tuple(key, NULL)) : NULL;
+    if(!list) return NULL;
+
+    #ifdef DEV
+    LOG("Entries '%s'.", linked_list_to_string(list));
+    #endif
+    LinkedList *res = linked_list_get_all(list, new_tuple(key, NULL));
+    #ifdef DEV
+    LOG("Entries '%s'.", linked_list_to_string(res));
+    #endif
     this = NULL;
 
     return res;

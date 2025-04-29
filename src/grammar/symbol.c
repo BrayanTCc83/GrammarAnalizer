@@ -21,6 +21,9 @@ Symbol *new_symbol(SymbolType type, const char *value) {
 }
 
 int symbol_to_hash(GenericValue s) {
+    #ifdef DEV
+    LOG("Hashing Symbol '%s'.", symbol_to_string(s));
+    #endif
     Symbol *symbol = (Symbol*) s;
     size_t len = strlen(symbol->value);
     int hash = 0, p_pow = 1;
@@ -30,6 +33,9 @@ int symbol_to_hash(GenericValue s) {
         p_pow = (p_pow * p) % m;
     }
 
+    #ifdef DEV
+    LOG("Hash generated %d.", hash);
+    #endif
     return hash;
 }
 

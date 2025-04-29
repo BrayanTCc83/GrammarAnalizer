@@ -140,10 +140,19 @@ static bool scanner_identify_tokens(Scanner *scanner) {
         if(token == (void*)EOF) {
             break;
         }
+        #ifdef DEV
+        LOG("Read token '%s'.", token);
+        #endif
 
         if(strcmp(token, "->") == 0) {
+            #ifdef DEV
+            LOG("Insert '%s' at No Terminal.", last_token);
+            #endif
             res = scanner_insert_no_terminal(scanner, last_token) != NULL && res;
         } else {
+            #ifdef DEV
+            LOG("Insert '%s' at Terminal.", token);
+            #endif
             res = scanner_insert_terminal(scanner, token) != NULL && res;
         }
 
@@ -151,6 +160,12 @@ static bool scanner_identify_tokens(Scanner *scanner) {
     }
     scanner->grammar->terminal = set_difference(*scanner->grammar->terminal, *scanner->grammar->no_terminal);
     fseek(scanner->file, 0, SEEK_SET);
+    #ifdef DEV
+    LOG("Grammar Non Terminals: %s", set_to_string(*scanner->grammar->no_terminal));
+    #endif
+    #ifdef DEV
+    LOG("Grammar Terminals: %s", set_to_string(*scanner->grammar->terminal));
+    #endif
     return res;
 }
 
