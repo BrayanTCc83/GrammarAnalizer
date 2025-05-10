@@ -212,33 +212,39 @@ static Set *interpreter_get_no_terminal_follow(Interpreter *interpreter, Symbol 
         LinkedList *product = production->product;
         SimpleNode *p = product->begin;
         while(p) {
-            if(symbol_compare(p->data, symbol) == EQUALS) {
-                break;
-            }
-            p = p->next;
-        }
-
-        if(p && p->next == NULL) {
-            symbol->follow = set_union(
-                *symbol->follow,
-                *interpreter_get_no_terminal_follow(interpreter, productor)
-            );
-
-            if(productor->type | START) {
-                set_insert(symbol->follow, end_string);
-            }
-        } else if(p && p->next) {
-            Symbol *next = (Symbol*)(p->next->data);
-            if(next->type & TERMINAL) {
-                set_insert(symbol->follow, next);
-            } else if(next->type & NO_TERMINAL) {
-                symbol->follow = set_union(*symbol->follow, *next->first);
-                if(set_search(*interpreter->grammar->anulable, next) != NULL) {
-                    symbol->follow = set_union(
-                        *symbol->follow,
-                        *interpreter_get_no_terminal_follow(interpreter, next)
-                    );
+            while(p) {
+                if(symbol_compare(p->data, symbol) == EQUALS) {
+                    break;
                 }
+                p = p->next;
+            }
+
+            if(p && p->next == NULL) {
+                symbol->follow = set_union(
+                    *symbol->follow,
+                    *interpreter_get_no_terminal_follow(interpreter, productor)
+                );
+
+                if(productor->type | START) {
+                    set_insert(symbol->follow, end_string);
+                }
+            } else if(p && p->next) {
+                Symbol *next = (Symbol*)(p->next->data);
+                if(next->type & TERMINAL) {
+                    set_insert(symbol->follow, next);
+                } else if(next->type & NO_TERMINAL) {
+                    symbol->follow = set_union(*symbol->follow, *next->first);
+                    if(set_search(*interpreter->grammar->anulable, next) != NULL) {
+                        symbol->follow = set_union(
+                            *symbol->follow,
+                            *interpreter_get_no_terminal_follow(interpreter, next)
+                        );
+                    }
+                }
+            }
+
+            if(p) {
+                p = p->next;
             }
         }
         ref = ref->next;
