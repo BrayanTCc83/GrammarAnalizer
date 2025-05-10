@@ -64,6 +64,14 @@ static void interpreter_find_anulables(Interpreter *interpreter) {
         }
         ref = ref->next;
     }
+    if(missings->size == interpreter->grammar->no_terminal->size) {
+        interpreter->grammar->anulable = new_set(symbol_compare, delete_symbol, symbol_to_string);
+        #ifdef DEV
+        LOG("There aren't anulable productions.");
+        LOG("Anulables: %s.", set_to_string(*interpreter->grammar->anulable));
+        #endif
+        return;
+    }
     // Get all whose generate a set of no terminals anulables.
     ref = missings->begin;
     #ifdef DEV
@@ -90,7 +98,7 @@ static void interpreter_find_anulables(Interpreter *interpreter) {
         ref = ref->next;
     }
     #ifdef DEV
-    LOG("Anulables: %s", set_to_string(*interpreter->grammar->anulable));
+    LOG("Anulables: %s.", set_to_string(*interpreter->grammar->anulable));
     #endif
 }
 
@@ -100,7 +108,7 @@ Set *interpreter_get_production_first(Interpreter *interpreter, Production *prod
     #endif
     if(production->first) {
         #ifdef DEV
-        LOG("First set of production %s %p %s", production_to_string(production), production, set_to_string(*production->first));
+        LOG("First set of production '%s' %p %s", production_to_string(production), production, set_to_string(*production->first));
         #endif
         return production->first;
     }
@@ -111,7 +119,7 @@ Set *interpreter_get_production_first(Interpreter *interpreter, Production *prod
     SimpleNode *ref = production->product->begin;
     if(!ref) {
         #ifdef DEV
-        LOG("First set of production %s %p %s\n", production_to_string(production), production, set_to_string(*production->first));
+        LOG("First set of production '%s' %p %s", production_to_string(production), production, set_to_string(*production->first));
         #endif
         return production->first;
     }
@@ -133,25 +141,25 @@ Set *interpreter_get_production_first(Interpreter *interpreter, Production *prod
     }
 
     #ifdef DEV
-    LOG("First set of production %s %p %s\n", production_to_string(production), production, set_to_string(*production->first));
+    LOG("First set of production '%s' %p %s\n", production_to_string(production), production, set_to_string(*production->first));
     #endif
     return production->first;
 }
 
 Set *interpreter_get_no_terminal_first(Interpreter *interpreter, Symbol *no_terminal, HashTable *table) {
     #ifdef DEV
-    LOG("First set of non terminal %s %p %p\n", symbol_to_string(no_terminal), no_terminal, no_terminal->first);
+    LOG("Looking for non terminal: '%s' %p %p", symbol_to_string(no_terminal), no_terminal, no_terminal->first);
     #endif
     if(no_terminal->first) {
         #ifdef DEV
-        LOG("First set of non terminal %s %p %s\n", symbol_to_string(no_terminal), no_terminal, set_to_string(*no_terminal->first));
+        LOG("First set of non terminal '%s' %p %s", symbol_to_string(no_terminal), no_terminal, set_to_string(*no_terminal->first));
         #endif
         return no_terminal->first;
     }
 
     no_terminal->first = new_set(symbol_compare, delete_symbol, symbol_to_string);
     #ifdef DEV
-    LOG("First set of non terminal %s %p %s\n", symbol_to_string(no_terminal), no_terminal, set_to_string(*no_terminal->first));
+    LOG("First set of non terminal '%s' %p %s", symbol_to_string(no_terminal), no_terminal, set_to_string(*no_terminal->first));
     #endif
     
     LinkedList *productions = hash_table_get(table, no_terminal);
@@ -165,7 +173,7 @@ Set *interpreter_get_no_terminal_first(Interpreter *interpreter, Symbol *no_term
     }
     
     #ifdef DEV
-    LOG("First set of non terminal %s %p %s\n", symbol_to_string(no_terminal), no_terminal, set_to_string(*no_terminal->first));
+    LOG("First set of non terminal '%s' %p %s", symbol_to_string(no_terminal), no_terminal, set_to_string(*no_terminal->first));
     #endif
     return no_terminal->first;
 }
@@ -311,7 +319,7 @@ static bool interpreter_grammar_s_validation(Interpreter *interpreter) {
         }
 
         Symbol *symbol = (Symbol*) production->product->begin->data;
-        if(symbol->type | NO_TERMINAL) {
+        if(symbol->type & NO_TERMINAL) {
             printf("Grammar is not type S. Production %s start with Non Terminal.\n", production_to_string(production));
             return false;
         }
@@ -380,7 +388,7 @@ static bool interpreter_grammar_q_validation(Interpreter *interpreter) {
         }
 
         Symbol *symbol = (Symbol*) production->product->begin->data;
-        if(symbol->type | NO_TERMINAL) {
+        if(symbol->type & NO_TERMINAL) {
             printf("Grammar is not type q. Production %s starts with Non Terminal.\n", production_to_string(production));
             return false;
         }

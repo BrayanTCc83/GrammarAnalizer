@@ -42,6 +42,9 @@ static bool parser_generate_productions(Parser *parser) {
         #ifdef DEV
         LOG("Read token '%s'.", token);
         #endif
+        #ifdef DEV
+        LOG("Current production '%p'.", production);
+        #endif
 
         if(strcmp(token, "->") == 0) {
             #ifdef DEV
@@ -54,7 +57,7 @@ static bool parser_generate_productions(Parser *parser) {
             #ifdef DEV
             LOG("Insert '%s' on production '%s' at Terminal.", token, production_to_string(production));
             #endif
-            symbol = new_symbol(ERROR, token);;
+            symbol = new_symbol(ERROR, token);
             s = grammar_search_no_terminal(*parser->grammar, symbol);
             if(!s) {
                 s = grammar_search_terminal(*parser->grammar, symbol);
@@ -64,8 +67,14 @@ static bool parser_generate_productions(Parser *parser) {
             }
         }
 
-        if(getc(file) == '\n') {
+        char c = getc(file);
+        if(c == '\n') {
             production = NULL;
+            continue;
+        }
+
+        if(c == EOF) {
+            break;
         }
     }
     #ifdef DEV

@@ -102,6 +102,10 @@ void grammar_show_first_sets(Grammar grammar) {
 }
 
 void grammar_show_follow_sets(Grammar grammar) {
+    if(!grammar.anulable->size) {
+        printf("%50s", "\tNo anulable productions, then no follow sets calculated.\n");
+        return;
+    }
     SimpleNode *ref = set_as_list(*grammar.no_terminal)->begin;
     while(ref) {
         if(!((Symbol*)ref->data)->follow) {

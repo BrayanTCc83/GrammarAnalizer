@@ -22,15 +22,17 @@ char *scanner_read_token(Scanner *scanner) {
     int idx = 0;
 
     char c;
-    while((c = fgetc(scanner->file)) != ' ' && c != '\n' && c != EOF) {
+    while((c = fgetc(scanner->file)) != ' ' && c != '\n' && c != '\t' && c != EOF) {
         idx += sprintf(string + idx, "%c", c);
     }
 
-    if(c == '\n' || c == ' ') {
+    if(c == '\n' || c == ' ' || c == '\t') {
         fseek(scanner->file, -1, SEEK_CUR);
     }
 
-    if(c == EOF) return (void*) EOF;
+    if(c == EOF) {
+        fseek(scanner->file, 0, SEEK_END);
+    }
     return string;
 }
 
@@ -156,7 +158,9 @@ static bool scanner_identify_tokens(Scanner *scanner) {
             res = scanner_insert_terminal(scanner, token) != NULL && res;
         }
 
-        getc(scanner->file);
+        if(getc(scanner->file) == EOF) {
+            break;
+        }
     }
     scanner->grammar->terminal = set_difference(*scanner->grammar->terminal, *scanner->grammar->no_terminal);
     fseek(scanner->file, 0, SEEK_SET);
