@@ -225,20 +225,38 @@ static Set *interpreter_get_no_terminal_follow(Interpreter *interpreter, Symbol 
                     *interpreter_get_no_terminal_follow(interpreter, productor)
                 );
 
-                if(productor->type | START) {
+                if(productor->type & START) {
                     set_insert(symbol->follow, end_string);
                 }
             } else if(p && p->next) {
                 Symbol *next = (Symbol*)(p->next->data);
                 if(next->type & TERMINAL) {
                     set_insert(symbol->follow, next);
-                } else if(next->type & NO_TERMINAL) {
-                    symbol->follow = set_union(*symbol->follow, *next->first);
-                    if(set_search(*interpreter->grammar->anulable, next) != NULL) {
+                } else {
+                    SimpleNode *pi = p->next;
+                    while(pi && next->type & NO_TERMINAL) {
                         symbol->follow = set_union(
                             *symbol->follow,
-                            *interpreter_get_no_terminal_follow(interpreter, next)
+                            *interpreter_get_no_terminal_first(interpreter, next, interpreter->parser->rules)
                         );
+                        if(!set_search(*interpreter->grammar->anulable, next)) {
+                            break;
+                        }
+
+                        pi = pi->next;
+                        if(pi) {
+                            next = (Symbol*) pi->data;
+                        }
+                    }
+                    if(!pi) {
+                        symbol->follow = set_union(
+                            *symbol->follow,
+                            *interpreter_get_no_terminal_follow(interpreter, productor)
+                        );
+
+                        if(productor->type & START) {
+                            set_insert(symbol->follow, end_string);
+                        }
                     }
                 }
             }
